@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Axios } from "@/axios";
@@ -19,95 +19,93 @@ export default function CategoriesPage() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("name");
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>("");
+  // Removed unused error state to fix TypeScript warning
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  useEffect(() => {
-    filterAndSortCategories();
-  }, [categories, sortBy, searchTerm]);
-
-  const fetchCategories = async () => {
-    try {
-      setLoading(true);
-      setError("");
-      console.log("Fetching categories from /categories endpoint...");
-
-      // Use the same working endpoint from your other page
-      const res = await Axios.get("/categories");
-      console.log("API response:", res.data);
-
-      if (!res.data || !Array.isArray(res.data)) {
-        throw new Error("Invalid response format - expected array");
-      }
-
-      // Map the response data to match your category structure
-      const categoriesData = res.data.map((cat: any) => ({
-        id: cat.id.toString(),
-        title: cat.title || cat.name || "Untitled Category",
-        image: cat.image || cat.image_url || cat.img || cat.thumbnail || "",
-        description: cat.description || cat.desc,
-      }));
-
-      console.log("Processed categories:", categoriesData);
-      setCategories(categoriesData);
-    } catch (error: any) {
-      console.error("Error fetching categories:", error);
-
-      // More specific error handling
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        setError(
-          `Server error: ${error.response.status} - ${error.response.statusText}`
-        );
-        console.error("Response data:", error.response.data);
-        console.error("Response headers:", error.response.headers);
-      } else if (error.request) {
-        // The request was made but no response was received
-        setError("No response from server. Check your network connection.");
-        console.error("Request:", error.request);
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        setError(`Request error: ${error.message}`);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterAndSortCategories = () => {
-    let filtered = categories;
+  const filterAndSortCategories = useCallback(() => {
+    let filtered = [...categories];
 
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(
         (category) =>
           category.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          category.description?.toLowerCase().includes(searchTerm.toLowerCase())
+          (category.description?.toLowerCase() ?? '').includes(searchTerm.toLowerCase())
       );
     }
 
     // Sort categories
     const sorted = [...filtered].sort((a, b) => {
       switch (sortBy) {
-        case "name-desc":
+        case 'name-desc':
           return b.title.localeCompare(a.title);
-        case "newest":
+        case 'newest':
           return parseInt(b.id) - parseInt(a.id);
-        case "oldest":
+        case 'oldest':
           return parseInt(a.id) - parseInt(b.id);
-        default: // 'name'
+        case 'name':
+        default:
           return a.title.localeCompare(b.title);
       }
     });
 
     setFilteredCategories(sorted);
-  };
+  }, [categories, sortBy, searchTerm]);
 
-  if (loading) return <Loader />;
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        console.log('Fetching categories from /categories endpoint...');
+
+        const res = await Axios.get('/categories');
+        console.log('API response:', res.data);
+
+        if (!res.data || !Array.isArray(res.data)) {
+          throw new Error('Invalid response format - expected array');
+        }
+
+        // Define interface for API response
+        interface ApiCategory {
+          id: string | number;
+          title?: string;
+          name?: string;
+          image?: string;
+          image_url?: string;
+          img?: string;
+          thumbnail?: string;
+          description?: string;
+          desc?: string;
+        }
+
+        // Map the response data to match your category structure
+        const categoriesData = res.data.map((cat: ApiCategory) => ({
+          id: cat.id.toString(),
+          title: cat.title || cat.name || 'Untitled Category',
+          image: cat.image || cat.image_url || cat.img || cat.thumbnail || '',
+          description: cat.description || cat.desc,
+        }));
+
+        console.log('Processed categories:', categoriesData);
+        setCategories(categoriesData);
+      } catch (err) {
+        console.error('Error fetching categories:', err);
+        // Error is already logged to console, no need for additional error state
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Update filtered categories when dependencies change
+  useEffect(() => {
+    filterAndSortCategories();
+  }, [filterAndSortCategories]);
+
+  if (loading) {
+    return <Loader />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
