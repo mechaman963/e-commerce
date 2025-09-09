@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, JSX } from "react";
+import { useState, useEffect, useCallback, JSX } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -35,11 +35,7 @@ const CategoryPage = (): JSX.Element => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
 
-  useEffect(() => {
-    fetchCategory();
-  }, [categoryId]);
-
-  const fetchCategory = async () => {
+  const fetchCategory = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -51,18 +47,37 @@ const CategoryPage = (): JSX.Element => {
         throw new Error("Invalid response format");
       }
 
+      // Define proper interface for the API response
+      interface ApiProduct {
+        id: string | number;
+        title?: string;
+        name?: string;
+        images?: Array<{ image: string }>;
+        image?: string;
+        About?: string;
+        about?: string;
+        description?: string;
+        desc?: string;
+        price: number | string;
+        discount: number | string;
+        rating?: number | string;
+        status?: string;
+      }
+
       // Format the category data
       const categoryData: Category = {
         id: res.data.id.toString(),
-        title: res.data.title || res.data.name,
+        title: res.data.title || res.data.name || 'Unnamed Category',
         image: res.data.image || res.data.image_url || "",
         description: res.data.description || res.data.desc || "",
         products: Array.isArray(res.data.products)
-          ? res.data.products.map((product: any) => ({
+          ? res.data.products.map((product: ApiProduct) => ({
               id: product.id.toString(),
-              title: product.title || product.name,
-              image: product.images?.[0]?.image || product.image || "",
-              about: product.About || product.about || "",
+              title: product.title || product.name || 'Unnamed Product',
+              image: Array.isArray(product.images) && product.images.length > 0 
+                ? product.images[0].image 
+                : product.image || "",
+              about: product.about || product.About || "",
               desc: product.description || product.desc || "",
               price: Number(product.price) || 0,
               discount: Number(product.discount) || 0,
@@ -74,8 +89,13 @@ const CategoryPage = (): JSX.Element => {
 
       console.log("Processed category:", categoryData);
       setCategory(categoryData);
-    } catch (error: any) {
-      console.error("Error fetching category:", error);
+    } catch (err) {
+      console.error("Error fetching category:", err);
+      const error = err as { 
+        response?: { status: number; statusText: string }; 
+        request?: unknown; 
+        message: string 
+      };
 
       if (error.response) {
         setError(
@@ -89,7 +109,11 @@ const CategoryPage = (): JSX.Element => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [categoryId]);
+
+  useEffect(() => {
+    fetchCategory();
+  }, [fetchCategory]);
 
   if (loading) {
     return (
@@ -140,24 +164,27 @@ const CategoryPage = (): JSX.Element => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <svg
-            className="mx-auto h-12 w-12 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
+          <div className="w-12 h-12 mx-auto text-gray-400">
+            <svg
+              className="w-full h-full"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
           <h3 className="mt-2 text-lg font-medium text-gray-900">
             Category not found
           </h3>
           <p className="mt-1 text-gray-500">
-            The category you're looking for doesn't exist.
+            The category you&#39;re looking for doesn&#39;t exist.
           </p>
           <div className="mt-6">
             <Link
@@ -261,6 +288,7 @@ const CategoryPage = (): JSX.Element => {
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
             >
               <path
                 strokeLinecap="round"
@@ -269,20 +297,7 @@ const CategoryPage = (): JSX.Element => {
                 d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <h3 className="mt-2 text-lg font-medium text-gray-900">
-              No products found
-            </h3>
-            <p className="mt-1 text-gray-500">
-              There are no products in this category yet.
-            </p>
-            <div className="mt-6">
-              <Link
-                href="/categories"
-                className="text-blue-600 hover:text-blue-800 font-medium"
-              >
-                Browse other categories
-              </Link>
-            </div>
+            <p className="mt-2 text-gray-600">No products found in this category.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
