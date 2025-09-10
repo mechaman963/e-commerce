@@ -4,7 +4,7 @@ import { Axios } from "@/axios";
 import { useRouter } from "next/navigation";
 import Cookies from "universal-cookie";
 
-const LogOut = ({ parent }: { parent?: string }) => {
+const LogOut = ({ parent }: { parent: string }) => {
   const router = useRouter();
   const cookies = new Cookies();
 

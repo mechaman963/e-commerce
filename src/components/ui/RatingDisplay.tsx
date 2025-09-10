@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Axios } from "@/axios";
 import StarRating from "./StarRating";
 // Simple date formatting function
@@ -48,12 +48,7 @@ export default function RatingDisplay({ productId }: RatingDisplayProps) {
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
 
-  useEffect(() => {
-    fetchRatings();
-    fetchStats();
-  }, [productId]);
-
-  const fetchRatings = async () => {
+  const fetchRatings = useCallback(async () => {
     try {
       const response = await Axios.get(`/product/${productId}/ratings`);
       if (response.data.success) {
@@ -62,11 +57,11 @@ export default function RatingDisplay({ productId }: RatingDisplayProps) {
     } catch (error) {
       console.error("Error fetching ratings:", error);
     }
-  };
+  }, [productId]);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
-      const response = await Axios.get(`/product/${productId}/rating-stats`);
+      const response = await Axios.get(`/product/${productId}/ratings/stats`);
       if (response.data.success) {
         setStats(response.data.data);
       }
@@ -75,7 +70,12 @@ export default function RatingDisplay({ productId }: RatingDisplayProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [productId]);
+
+  useEffect(() => {
+    fetchRatings();
+    fetchStats();
+  }, [fetchRatings, fetchStats]);
 
   if (loading) {
     return (

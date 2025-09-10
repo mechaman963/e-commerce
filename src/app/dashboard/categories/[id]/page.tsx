@@ -30,7 +30,7 @@ const EditCategory = (): JSX.Element => {
   const router = useRouter();
 
   const { id } = useParams();
-  const [_, setCategory] = useState<object>({});
+  const [, setCategory] = useState<object>({});
   const [originalCategory, setOriginalCategory] = useState<TInputs>({
     title: "",
     image: undefined,
@@ -74,7 +74,7 @@ const EditCategory = (): JSX.Element => {
       }
     };
     fetchCategory();
-  }, [id]);
+  }, [id, router]);
 
   if (loading)
     return (

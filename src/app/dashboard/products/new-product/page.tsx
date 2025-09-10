@@ -2,6 +2,7 @@
 
 import { Axios } from "@/axios";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { JSX, useState, useEffect } from "react";
 import { z } from "zod";
 import { TCategory } from "@/lib/data";
@@ -471,11 +472,15 @@ const NewProduct = (): JSX.Element => {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {newProduct.images.map((file, index) => (
                   <div key={index} className="relative group">
-                    <img
-                      src={getImagePreview(file)}
-                      alt={`Preview ${index + 1}`}
-                      className="w-full h-24 object-cover rounded-lg border-2 border-gray-200 group-hover:border-blue-300 transition-colors"
-                    />
+                    <div className="w-full h-24 relative">
+                      <Image
+                        src={getImagePreview(file)}
+                        alt={`Preview ${index + 1}`}
+                        fill
+                        className="rounded-lg border-2 border-gray-200 group-hover:border-blue-300 transition-colors object-cover"
+                        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                      />
+                    </div>
                     <button
                       type="button"
                       onClick={() => removeImage(index)}

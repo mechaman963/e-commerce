@@ -44,7 +44,7 @@ const User = (): JSX.Element => {
   const router = useRouter();
 
   const { id } = useParams();
-  const [_, setUser] = useState<object>({});
+  const [, setUser] = useState<object>({});
   const [originalUser, setOriginalUser] = useState<TInputs>({
     name: "",
     email: "",
@@ -101,7 +101,7 @@ const User = (): JSX.Element => {
       }
     };
     fetchUser();
-  }, [id]);
+  }, [id, router]);
 
   if (loading)
     return (
