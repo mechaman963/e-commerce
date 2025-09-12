@@ -45,7 +45,7 @@ const Slider = memo((): JSX.Element => {
 
   return (
     <div
-      className={`w-screen h-[calc(100dvh-140px)] md:h-[calc(100dvh-80px)] bg-slate-100 flex flex-col md:flex-row-reverse`}
+      className={`w-screen h-[calc(100dvh-156px)] md:h-[calc(100dvh-80px)] bg-slate-100 flex flex-col md:flex-row-reverse`}
     >
       <div className="w-full md:w-1/2 h-1/2 md:h-full relative">
         <Image
