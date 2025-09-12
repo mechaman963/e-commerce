@@ -227,8 +227,8 @@ const TopRatedSlider = memo(() => {
   }
 
   return (
-    <section className="py-12 bg-gray-50">
-      <div className="px-4 sm:px-6 md:px-8 lg:px-16 xl:px-32 2xl:px-64">
+    <section className="py-10 bg-gray-50 overflow-hidden">
+      <div className="px-4 sm:px-6 md:px-8 lg:px-16 xl:px-32 2xl:px-64 py-6">
         <div className="relative">
           {/* Navigation Arrows */}
           {products.length > slidesToShow && (
