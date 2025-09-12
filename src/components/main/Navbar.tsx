@@ -27,7 +27,7 @@ const Navbar = () => {
           <Profile />
         </div>
       </div>
-      <div className=" w-full block md:hidden pb-3">
+      <div className=" w-full block md:hidden">
         <NavbarLinks visibility="flex md:hidden" pathname={pathname} />
       </div>
     </div>
