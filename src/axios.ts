@@ -11,7 +11,7 @@ const CACHE_DURATION =
   process.env.NODE_ENV === "production" ? 5 * 60 * 1000 : 0; // No cache in dev
 
 export const Axios = axios.create({
-  baseURL: "https://mecha-man-e-commerce.up.railway.app",
+  baseURL: "https://mecha-man-e-commerce.up.railway.app/api",
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
@@ -98,6 +98,6 @@ export const clearCache = () => {
 
 // Clear specific cache entry
 export const clearCacheEntry = (url: string) => {
-  const cacheKey = `https://mecha-man-e-commerce.up.railway.app${url}`;
+  const cacheKey = `https://mecha-man-e-commerce.up.railway.app/api${url}`;
   cache.delete(cacheKey);
 };
