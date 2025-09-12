@@ -3,7 +3,7 @@ import Image from "next/image";
 const LoginWithGoogle = () => {
   return (
     <Link
-      href={`http://127.0.0.1:8000/api/login-google`}
+      href={`https://mecha-man-e-commerce.up.railway.app/api/login-google`}
       className={`w-max flex items-center border-[1px] border-blue-500 rounded-md hover:shadow-[0_0_8px_0_#66A3FF] duration-200`}
     >
       <div className="relative size-12 overflow-hidden rounded-sm">
