@@ -74,7 +74,7 @@ const Profile = () => {
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
             <Link
-              href={"/sign-up"}
+              href={"/signup"}
               className="text-lg flex items-center gap-2"
               onClick={() => setIsOpen(false)}
             >
