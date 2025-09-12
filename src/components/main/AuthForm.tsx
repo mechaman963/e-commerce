@@ -85,6 +85,9 @@ const AuthForm = ({ parent }: { parent: string }) => {
         const res = await Axios.post(`/register`, inputs);
         cookies.set("Bearer", res.data.token);
         cookies.set("currentUserId", res.data.user.id);
+        console.log('=======================')
+        console.log(res.data)
+        console.log('=======================')
         await getRole(res.data.user.id);
         router.push("/");
       } catch (e: unknown) {
