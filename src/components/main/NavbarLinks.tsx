@@ -4,6 +4,7 @@ type TLinks = {
   id: number;
   title: string;
   url: string;
+  classname?: string;
 };
 
 const links: TLinks[] = [
@@ -11,7 +12,7 @@ const links: TLinks[] = [
   { id: 2, title: "Products", url: "/products" },
   { id: 3, title: "Categories", url: "/categories" },
   { id: 4, title: "Sales", url: "/sales" },
-  { id: 5, title: "Cart", url: "/cart" },
+  { id: 5, title: "Cart", url: "/cart", classname: "hidden sm:block" },
 ];
 
 const NavbarLinks = ({
@@ -31,6 +32,7 @@ const NavbarLinks = ({
           key={link.id}
           href={link.url}
           className={`
+          ${link.classname && link.classname} 
             relative h-full leading-18 overflow-hidden
             text-lg md:text-base lg:text-lg
             ${pathname == link.url ? "font-semibold" : ""}
