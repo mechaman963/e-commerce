@@ -1,3 +1,5 @@
+"use client"
+
 import AuthForm from "@/components/main/AuthForm";
 
 const Login = () => {
