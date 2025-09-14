@@ -1,99 +1,117 @@
 "use client";
 
 import React, { createContext, useContext, useReducer, useEffect } from "react";
-import * as api from "@/api/cart"; // adjust path if different
+import { Axios, clearCacheEntry } from "@/api/axios"; // adjust path if needed
 
-const CartContext = createContext(null);
+interface CartState {
+  items: any[];
+  summary: any;
+  loading: boolean;
+}
 
-const initialState = {
+type Action =
+  | { type: "SET_CART"; payload: { items: any[]; summary: any } }
+  | { type: "SET_LOADING"; payload: boolean };
+
+const initialState: CartState = {
   items: [],
-  summary: { subtotal: 0, total_items: 0, items_count: 0 },
+  summary: null,
   loading: false,
-  error: null,
 };
 
-function reducer(state, action) {
+function cartReducer(state: CartState, action: Action): CartState {
   switch (action.type) {
-    case "LOADING":
-      return { ...state, loading: true };
     case "SET_CART":
-      return {
-        ...state,
-        loading: false,
-        items: action.payload.items,
-        summary: action.payload.summary,
-        error: null,
-      };
-    case "ERROR":
-      return { ...state, loading: false, error: action.payload };
+      return { ...state, items: action.payload.items, summary: action.payload.summary, loading: false };
+    case "SET_LOADING":
+      return { ...state, loading: action.payload };
     default:
       return state;
   }
 }
 
-export const CartProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(reducer, initialState);
+const CartContext = createContext<any>(null);
 
-  // 🔹 Fetch full cart from backend
+export const CartProvider = ({ children }: { children: React.ReactNode }) => {
+  const [state, dispatch] = useReducer(cartReducer, initialState);
+
   const fetchCart = async () => {
-    dispatch({ type: "LOADING" });
+    dispatch({ type: "SET_LOADING", payload: true });
     try {
-      const res = await api.getCart();
-      dispatch({ type: "SET_CART", payload: res });
+      const res = await Axios.get("/cart");
+      dispatch({ type: "SET_CART", payload: res.data });
     } catch (err) {
-      dispatch({ type: "ERROR", payload: err });
+      console.error("Failed to fetch cart", err);
+      dispatch({ type: "SET_LOADING", payload: false });
     }
   };
 
-  // 🔹 Add item -> replace with updated cart from backend
-  const addToCart = async (productId, quantity) => {
-    dispatch({ type: "LOADING" });
+  const addToCart = async (productId: number, quantity: number) => {
+    dispatch({ type: "SET_LOADING", payload: true });
     try {
-      const res = await api.addToCart(productId, quantity);
-      dispatch({ type: "SET_CART", payload: res }); // full updated cart
+      const res = await Axios.post("/cart", { product_id: productId, quantity });
+      clearCacheEntry("/cart");
+      clearCacheEntry("/cart/count");
+      dispatch({ type: "SET_CART", payload: res.data });
     } catch (err) {
-      dispatch({ type: "ERROR", payload: err });
+      console.error("Failed to add to cart", err);
+      dispatch({ type: "SET_LOADING", payload: false });
     }
   };
 
-  const updateCartItem = async (id, quantity) => {
-    dispatch({ type: "LOADING" });
+  const updateCartItem = async (id: number, quantity: number) => {
+    dispatch({ type: "SET_LOADING", payload: true });
     try {
-      const res = await api.updateCartItem(id, quantity);
-      dispatch({ type: "SET_CART", payload: res });
+      const res = await Axios.put(`/cart/${id}`, { quantity });
+      clearCacheEntry("/cart");
+      clearCacheEntry("/cart/count");
+      dispatch({ type: "SET_CART", payload: res.data });
     } catch (err) {
-      dispatch({ type: "ERROR", payload: err });
+      console.error("Failed to update cart item", err);
+      dispatch({ type: "SET_LOADING", payload: false });
     }
   };
 
-  const removeFromCart = async (id) => {
-    dispatch({ type: "LOADING" });
+  const removeFromCart = async (id: number) => {
+    dispatch({ type: "SET_LOADING", payload: true });
     try {
-      const res = await api.removeFromCart(id);
-      dispatch({ type: "SET_CART", payload: res });
+      const res = await Axios.delete(`/cart/${id}`);
+      clearCacheEntry("/cart");
+      clearCacheEntry("/cart/count");
+      dispatch({ type: "SET_CART", payload: res.data });
     } catch (err) {
-      dispatch({ type: "ERROR", payload: err });
+      console.error("Failed to remove from cart", err);
+      dispatch({ type: "SET_LOADING", payload: false });
     }
   };
 
   const clearCart = async () => {
-    dispatch({ type: "LOADING" });
+    dispatch({ type: "SET_LOADING", payload: true });
     try {
-      const res = await api.clearCart();
-      dispatch({ type: "SET_CART", payload: res });
+      const res = await Axios.delete("/cart");
+      clearCacheEntry("/cart");
+      clearCacheEntry("/cart/count");
+      dispatch({ type: "SET_CART", payload: res.data });
     } catch (err) {
-      dispatch({ type: "ERROR", payload: err });
+      console.error("Failed to clear cart", err);
+      dispatch({ type: "SET_LOADING", payload: false });
     }
   };
 
-  // 🔹 Load cart on first render
   useEffect(() => {
     fetchCart();
   }, []);
 
   return (
     <CartContext.Provider
-      value={{ state, fetchCart, addToCart, updateCartItem, removeFromCart, clearCart }}
+      value={{
+        state,
+        fetchCart,
+        addToCart,
+        updateCartItem,
+        removeFromCart,
+        clearCart,
+      }}
     >
       {children}
     </CartContext.Provider>
