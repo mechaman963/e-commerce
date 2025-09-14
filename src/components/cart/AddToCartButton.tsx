@@ -4,8 +4,11 @@ import React, { useState } from "react";
 import { ShoppingCart, Loader2, Plus, Minus } from "lucide-react";
 import { useCart } from "@/context/cartContext";
 
-const AddToCartButton: React.FC<{ productId: number }> = ({ productId }) => {
-  const { addToCart, state } = useCart();
+const AddToCartButton = ({ productId, className,showQuantitySelector, variant,size } : {productId: number;
+  className?: string;
+  showQuantitySelector?: boolean;
+  variant?: "default" | "outline" | "ghost";
+  size?: "sm" | "md" | "lg";}) => {  const { addToCart, state } = useCart();
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(false);
 
