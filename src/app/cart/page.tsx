@@ -43,7 +43,7 @@ const CartPage: React.FC = () => {
               />
               <div className="flex-1">
                 <h2 className="text-sm font-medium">{item.product.title}</h2>
-                <p className="text-gray-500 text-sm">${item.price.toFixed(2)}</p>
+                <p className="text-gray-500 text-sm">${item.product.price.toFixed(2)}</p>
 
                 {/* Quantity controls */}
                 <div className="flex items-center mt-2">
