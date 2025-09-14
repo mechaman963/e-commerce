@@ -1,24 +1,27 @@
 "use client";
 
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from "react";
-import { Axios, clearCacheEntry } from "@/axios";
+import React, { createContext, useContext, useReducer, useEffect } from "react";
+import { Axios, clearCacheEntry } from "@/axios"; // adjust path if needed
 
-// Cart item type (adjust to match backend payload)
+// --- Types ---
+interface Product {
+  id: number;
+  title: string;
+  price: number;
+  images?: { id: number; image: string }[];
+}
+
 export interface CartItem {
   id: number;
   product_id: number;
-  name: string;
-  price: number;
   quantity: number;
-  total: number;
-  [key: string]: unknown; // allow extra fields without breaking
+  product: Product;
 }
 
 export interface CartSummary {
-  subtotal: number;
-  tax: number;
   total: number;
-  [key: string]: unknown;
+  subtotal: number;
+  item_count: number;
 }
 
 interface CartState {
@@ -31,16 +34,23 @@ type Action =
   | { type: "SET_CART"; payload: { items: CartItem[]; summary: CartSummary } }
   | { type: "SET_LOADING"; payload: boolean };
 
+// --- Initial State ---
 const initialState: CartState = {
   items: [],
   summary: null,
   loading: false,
 };
 
+// --- Reducer ---
 function cartReducer(state: CartState, action: Action): CartState {
   switch (action.type) {
     case "SET_CART":
-      return { ...state, items: action.payload.items, summary: action.payload.summary, loading: false };
+      return {
+        ...state,
+        items: action.payload.items,
+        summary: action.payload.summary,
+        loading: false,
+      };
     case "SET_LOADING":
       return { ...state, loading: action.payload };
     default:
@@ -48,18 +58,18 @@ function cartReducer(state: CartState, action: Action): CartState {
   }
 }
 
-interface CartContextValue {
+// --- Context ---
+const CartContext = createContext<{
   state: CartState;
   fetchCart: () => Promise<void>;
   addToCart: (productId: number, quantity: number) => Promise<void>;
   updateCartItem: (id: number, quantity: number) => Promise<void>;
   removeFromCart: (id: number) => Promise<void>;
   clearCart: () => Promise<void>;
-}
+} | null>(null);
 
-const CartContext = createContext<CartContextValue | undefined>(undefined);
-
-export const CartProvider = ({ children }: { children: ReactNode }) => {
+// --- Provider ---
+export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [state, dispatch] = useReducer(cartReducer, initialState);
 
   const fetchCart = async () => {
@@ -146,7 +156,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useCart = () => {
-  const context = useContext(CartContext);
-  if (!context) throw new Error("useCart must be used within a CartProvider");
-  return context;
+  const ctx = useContext(CartContext);
+  if (!ctx) throw new Error("useCart must be used inside CartProvider");
+  return ctx;
 };
