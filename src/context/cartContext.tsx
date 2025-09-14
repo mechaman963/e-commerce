@@ -1,16 +1,34 @@
 "use client";
 
-import React, { createContext, useContext, useReducer, useEffect } from "react";
+import React, { createContext, useContext, useReducer, useEffect, ReactNode } from "react";
 import { Axios, clearCacheEntry } from "@/axios";
 
+// Cart item type (adjust to match backend payload)
+export interface CartItem {
+  id: number;
+  product_id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  total: number;
+  [key: string]: unknown; // allow extra fields without breaking
+}
+
+export interface CartSummary {
+  subtotal: number;
+  tax: number;
+  total: number;
+  [key: string]: unknown;
+}
+
 interface CartState {
-  items: any[];
-  summary: any;
+  items: CartItem[];
+  summary: CartSummary | null;
   loading: boolean;
 }
 
 type Action =
-  | { type: "SET_CART"; payload: { items: any[]; summary: any } }
+  | { type: "SET_CART"; payload: { items: CartItem[]; summary: CartSummary } }
   | { type: "SET_LOADING"; payload: boolean };
 
 const initialState: CartState = {
@@ -30,9 +48,18 @@ function cartReducer(state: CartState, action: Action): CartState {
   }
 }
 
-const CartContext = createContext<any>(null);
+interface CartContextValue {
+  state: CartState;
+  fetchCart: () => Promise<void>;
+  addToCart: (productId: number, quantity: number) => Promise<void>;
+  updateCartItem: (id: number, quantity: number) => Promise<void>;
+  removeFromCart: (id: number) => Promise<void>;
+  clearCart: () => Promise<void>;
+}
 
-export const CartProvider = ({ children }: { children: React.ReactNode }) => {
+const CartContext = createContext<CartContextValue | undefined>(undefined);
+
+export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(cartReducer, initialState);
 
   const fetchCart = async () => {
@@ -118,4 +145,8 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export const useCart = () => useContext(CartContext);
+export const useCart = () => {
+  const context = useContext(CartContext);
+  if (!context) throw new Error("useCart must be used within a CartProvider");
+  return context;
+};
