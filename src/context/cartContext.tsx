@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useReducer, useEffect } from "react";
-import { Axios, clearCacheEntry } from "@/api/axios"; // adjust path if needed
+import { Axios, clearCacheEntry } from "@/axios";
 
 interface CartState {
   items: any[];
