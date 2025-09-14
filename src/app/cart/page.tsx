@@ -78,7 +78,7 @@ const CartPage: React.FC = () => {
           <h2 className="text-lg font-semibold mb-4">Summary</h2>
           <div className="flex justify-between mb-2 text-sm">
             <span>Items</span>
-            <span>{summary.items_count}</span>
+            {summary && <span>{summary.items_count}</span>}
           </div>
           <div className="flex justify-between mb-4 text-sm">
             <span>Subtotal</span>
