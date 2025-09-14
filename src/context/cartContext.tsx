@@ -123,6 +123,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     dispatch({ type: "SET_LOADING", payload: true });
     try {
       const res = await Axios.post("/cart", { product_id: productId, quantity });
+      console.log(res.data)
       if (res.data.success) {
         await fetchCart(); // refresh summary
       }
