@@ -51,7 +51,7 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
             <div className="p-4 border-t bg-gray-50">
               <div className="flex justify-between text-sm mb-3">
                 <span>Subtotal</span>
-                <span className="font-semibold">${summary.subtotal.toFixed(2)}</span>
+                {summary && <span className="font-semibold">${summary.subtotal.toFixed(2)}</span>}
               </div>
               <Link href="/cart" onClick={onClose} className="block text-center bg-blue-600 text-white py-2 rounded-md">View Cart</Link>
             </div>
