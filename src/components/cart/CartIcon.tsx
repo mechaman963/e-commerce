@@ -11,15 +11,21 @@ const CartIcon: React.FC = () => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  // Update count when cart items change
+  // Update count safely when cart items change
   useEffect(() => {
-    setCount(state.items.reduce((acc, item) => acc + item.quantity, 0));
+    if (Array.isArray(state.items)) {
+      setCount(state.items.reduce((acc, item) => acc + (item.quantity || 0), 0));
+    } else {
+      setCount(0);
+    }
   }, [state.items]);
 
   // Close modal when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
     };
     if (open) document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
