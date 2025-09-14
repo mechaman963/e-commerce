@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useReducer, Dispatch } from "react";
-import { Axios } from "@/lib/axios";
+import { Axios } from "@/axios";
 
 // Cart types
 interface Product {
