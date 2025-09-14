@@ -19,7 +19,7 @@ export interface CartItem {
 
 interface CartSummary {
   total: number;
-  itemCount: number;
+  item_count: number; // match backend
 }
 
 interface CartState {
