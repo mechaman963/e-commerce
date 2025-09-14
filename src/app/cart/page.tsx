@@ -82,7 +82,7 @@ const CartPage: React.FC = () => {
           </div>
           <div className="flex justify-between mb-4 text-sm">
             <span>Subtotal</span>
-            <span>${summary.subtotal.toFixed(2)}</span>
+            {summary && <span>${summary?.subtotal.toFixed(2)}</span>}
           </div>
 
           <button className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">
