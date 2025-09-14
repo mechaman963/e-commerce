@@ -1,7 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useReducer } from "react";
-import { Axios } from "@/axios";
+import React, { createContext, useContext, useReducer, Dispatch } from "react";
+import { Axios } from "@/lib/axios";
 
 // Cart types
 interface Product {
@@ -11,7 +11,7 @@ interface Product {
   price: number;
 }
 
-interface CartItem {
+export interface CartItem {
   id: number;
   product: Product;
   quantity: number;
@@ -31,6 +31,15 @@ interface CartState {
 type Action =
   | { type: "SET_CART"; payload: { items: CartItem[]; summary: CartSummary | null } }
   | { type: "SET_LOADING"; payload: boolean };
+
+interface CartContextType {
+  state: CartState;
+  fetchCart: () => Promise<void>;
+  addToCart: (productId: number, quantity: number) => Promise<void>;
+  updateCartItem: (id: number, quantity: number) => Promise<void>;
+  removeFromCart: (id: number) => Promise<void>;
+  clearCart: () => Promise<void>;
+}
 
 const initialState: CartState = {
   items: [],
@@ -53,12 +62,11 @@ function reducer(state: CartState, action: Action): CartState {
   }
 }
 
-const CartContext = createContext<any>(null);
+const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  // Fetch cart
   const fetchCart = async () => {
     dispatch({ type: "SET_LOADING", payload: true });
     try {
@@ -77,25 +85,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Add item
   const addToCart = async (productId: number, quantity: number) => {
     await Axios.post("/cart", { product_id: productId, quantity });
     await fetchCart();
   };
 
-  // Update item
   const updateCartItem = async (id: number, quantity: number) => {
     await Axios.put(`/cart/${id}`, { quantity });
     await fetchCart();
   };
 
-  // Remove item
   const removeFromCart = async (id: number) => {
     await Axios.delete(`/cart/${id}`);
     await fetchCart();
   };
 
-  // Clear cart
   const clearCart = async () => {
     await Axios.delete("/cart/clear");
     await fetchCart();
@@ -117,4 +121,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useCart = () => useContext(CartContext);
+export const useCart = () => {
+  const context = useContext(CartContext);
+  if (!context) {
+    throw new Error("useCart must be used within a CartProvider");
+  }
+  return context;
+};
