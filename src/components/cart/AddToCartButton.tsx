@@ -1,36 +1,39 @@
 "use client";
 
 import React, { useState } from "react";
-import { ShoppingCart, Loader2, Plus, Minus } from "lucide-react";
 import { useCart } from "@/context/cartContext";
 
-const AddToCartButton = ({ productId, className,showQuantitySelector, variant,size } : {productId: number;
-  className?: string;
-  showQuantitySelector?: boolean;
-  variant?: "default" | "outline" | "ghost";
-  size?: "sm" | "md" | "lg";}) => {  const { addToCart, state } = useCart();
-  const [qty, setQty] = useState(1);
+interface AddToCartButtonProps {
+  productId: number;
+  quantity: number; // ✅ parent passes this
+}
+
+const AddToCartButton: React.FC<AddToCartButtonProps> = ({
+  productId,
+  quantity,
+}) => {
+  const { addToCart } = useCart();
   const [loading, setLoading] = useState(false);
 
-  const handleAdd = async () => {
-    setLoading(true);
-    await addToCart(productId, qty);
-    setQty(1);
-    setLoading(false);
+  const handleAddToCart = async () => {
+    try {
+      setLoading(true);
+      await addToCart(productId, quantity); // ✅ use parent-provided quantity
+    } catch (error) {
+      console.error("Error adding item to cart:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="flex items-center space-x-2">
-      <div className="flex items-center border rounded-md">
-        <button onClick={() => setQty(q => Math.max(1, q - 1))} disabled={qty === 1} className="px-2"><Minus className="w-4 h-4" /></button>
-        <span className="px-3">{qty}</span>
-        <button onClick={() => setQty(q => Math.min(99, q + 1))} className="px-2"><Plus className="w-4 h-4" /></button>
-      </div>
-      <button onClick={handleAdd} disabled={loading || state.loading} className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center">
-        {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ShoppingCart className="w-4 h-4 mr-2" />}
-        Add to Cart
-      </button>
-    </div>
+    <button
+      onClick={handleAddToCart}
+      disabled={loading}
+      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+    >
+      {loading ? "Adding..." : "Add to Cart"}
+    </button>
   );
 };
 
