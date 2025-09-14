@@ -40,7 +40,7 @@ const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
                 <Image src={item.product.images?.[0]?.image || "/api/placeholder/300/300"} alt={item.product.title} width={50} height={50} className="rounded" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">{item.product.title}</p>
-                  <p className="text-xs text-gray-500">${item.price} × {item.quantity}</p>
+                  <p className="text-xs text-gray-500">${item.product.price} × {item.quantity}</p>
                 </div>
                 <button onClick={() => removeFromCart(item.id)} className="text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
               </div>
