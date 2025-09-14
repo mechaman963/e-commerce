@@ -4,7 +4,7 @@ import React, { createContext, useContext, useReducer, useEffect, useCallback, u
 import { Axios } from "@/axios";
 import Cookies from "universal-cookie";
 
-// Types
+// --- Types ---
 export interface CartItem {
   id: number;
   user_id: number;
@@ -42,9 +42,6 @@ type CartAction =
   | { type: "SET_LOADING"; payload: boolean }
   | { type: "SET_ERROR"; payload: string | null }
   | { type: "SET_CART"; payload: { items: CartItem[]; summary: CartSummary } }
-  | { type: "ADD_ITEM"; payload: CartItem }
-  | { type: "UPDATE_ITEM"; payload: { id: number; quantity: number } }
-  | { type: "REMOVE_ITEM"; payload: number }
   | { type: "CLEAR_CART" };
 
 const initialState: CartState = {
@@ -54,7 +51,6 @@ const initialState: CartState = {
   error: null,
 };
 
-// Reducer
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case "SET_LOADING":
@@ -63,29 +59,18 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       return { ...state, error: action.payload, loading: false };
     case "SET_CART":
       return { ...state, items: action.payload.items, summary: action.payload.summary, loading: false, error: null };
-    case "ADD_ITEM":
-      return { ...state, items: [...state.items, action.payload], loading: false, error: null };
-    case "UPDATE_ITEM":
-      return {
-        ...state,
-        items: state.items.map((item) =>
-          item.id === action.payload.id ? { ...item, quantity: action.payload.quantity } : item
-        ),
-        loading: false,
-      };
-    case "REMOVE_ITEM":
-      return { ...state, items: state.items.filter((i) => i.id !== action.payload), loading: false };
     case "CLEAR_CART":
-      return { ...state, items: [], summary: { subtotal: 0, total_items: 0, items_count: 0 }, loading: false };
+      return { ...state, items: [], summary: { subtotal: 0, total_items: 0, items_count: 0 }, loading: false, error: null };
     default:
       return state;
   }
 }
 
+// --- Context ---
 interface CartContextType {
   state: CartState;
   fetchCart: () => Promise<void>;
-  addToCart: (productId: number, quantity?: number) => Promise<void>;
+  addToCart: (productId: number, quantity: number) => Promise<void>;
   updateCartItem: (itemId: number, quantity: number) => Promise<void>;
   removeFromCart: (itemId: number) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -94,7 +79,6 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-// Provider
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(cartReducer, initialState);
   const cookies = useMemo(() => new Cookies(), []);
@@ -108,25 +92,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     dispatch({ type: "SET_LOADING", payload: true });
     try {
-      const res = await Axios.get("/cart");
-      if (res.data.success) {
-        dispatch({ type: "SET_CART", payload: { items: res.data.data.items, summary: res.data.data.summary } });
+      const { data } = await Axios.get("/cart");
+      if (data.success) {
+        dispatch({ type: "SET_CART", payload: { items: data.data.items, summary: data.data.summary } });
       }
     } catch {
       dispatch({ type: "SET_ERROR", payload: "Failed to fetch cart" });
     }
   }, [isAuthenticated]);
 
-  const addToCart = async (productId: number, quantity = 1) => {
-    if (!isAuthenticated()) return dispatch({ type: "SET_ERROR", payload: "Please login" });
-
+  const addToCart = async (productId: number, quantity: number = 1) => {
+    if (!isAuthenticated()) return;
     dispatch({ type: "SET_LOADING", payload: true });
     try {
-      const res = await Axios.post("/cart", { product_id: productId, quantity });
-      console.log(res.data)
-      if (res.data.success) {
-        await fetchCart(); // refresh summary
-      }
+      await Axios.post("/cart", { product_id: productId, quantity });
+      await fetchCart();
     } catch {
       dispatch({ type: "SET_ERROR", payload: "Failed to add to cart" });
     }
@@ -136,11 +116,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!isAuthenticated()) return;
     dispatch({ type: "SET_LOADING", payload: true });
     try {
-      const res = await Axios.put(`/cart/${itemId}`, { quantity });
-      if (res.data.success) {
-        dispatch({ type: "UPDATE_ITEM", payload: { id: itemId, quantity } });
-        await fetchCart();
-      }
+      await Axios.put(`/cart/${itemId}`, { quantity });
+      await fetchCart();
     } catch {
       dispatch({ type: "SET_ERROR", payload: "Failed to update item" });
     }
@@ -150,11 +127,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!isAuthenticated()) return;
     dispatch({ type: "SET_LOADING", payload: true });
     try {
-      const res = await Axios.delete(`/cart/${itemId}`);
-      if (res.data.success) {
-        dispatch({ type: "REMOVE_ITEM", payload: itemId });
-        await fetchCart();
-      }
+      await Axios.delete(`/cart/${itemId}`);
+      await fetchCart();
     } catch {
       dispatch({ type: "SET_ERROR", payload: "Failed to remove item" });
     }
@@ -162,9 +136,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const clearCart = async () => {
     if (!isAuthenticated()) return;
+    dispatch({ type: "SET_LOADING", payload: true });
     try {
-      const res = await Axios.delete("/cart");
-      if (res.data.success) dispatch({ type: "CLEAR_CART" });
+      await Axios.delete("/cart");
+      await fetchCart();
     } catch {
       dispatch({ type: "SET_ERROR", payload: "Failed to clear cart" });
     }
@@ -173,22 +148,20 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const getCartCount = async (): Promise<number> => {
     if (!isAuthenticated()) return 0;
     try {
-      const res = await Axios.get("/cart/count");
-      return res.data.success ? res.data.data.count : 0;
+      const { data } = await Axios.get("/cart/count");
+      return data.success ? data.data.count : 0;
     } catch {
       return 0;
     }
   };
 
-  useEffect(() => {
-    fetchCart();
-  }, [fetchCart]);
+  useEffect(() => { fetchCart(); }, [fetchCart]);
 
   return <CartContext.Provider value={{ state, fetchCart, addToCart, updateCartItem, removeFromCart, clearCart, getCartCount }}>{children}</CartContext.Provider>;
 };
 
 export const useCart = () => {
-  const ctx = useContext(CartContext);
-  if (!ctx) throw new Error("useCart must be inside CartProvider");
-  return ctx;
+  const context = useContext(CartContext);
+  if (!context) throw new Error("useCart must be used within a CartProvider");
+  return context;
 };
